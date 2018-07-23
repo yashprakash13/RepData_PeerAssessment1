@@ -1,25 +1,126 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PA1_template"
+author: "Yash Prakash"
+date: "July 23, 2018"
+output: html_document
 ---
-
 
 ## Loading and preprocessing the data
 
+Loading the data
 
+```{r}
+df <- read.csv("data/activity.csv")
+```
 
-## What is mean total number of steps taken per day?
+##What is mean total number of steps taken per day?
 
+1. Calculate the total number of steps taken per day
+```{r}
+totalSteps <- aggregate(df$steps ~ df$date, df, sum)
+head(totalSteps, 5)
+```
 
+2. Make a histogram of the total number of steps taken each day
+```{r}
+hist(totalSteps$`df$steps`, xlab = "Steps", col = "tomato") 
+```
+
+3. Calculate and report the mean and median of the total number of steps taken per day
+```{r}
+MeanSteps <- mean(totalSteps$`df$steps`, na.rm = TRUE)
+MeanSteps
+MedianSteps <- median(totalSteps$`df$steps`, na.rm = TRUE)
+MedianSteps
+```
 
 ## What is the average daily activity pattern?
 
+1. Make a time series plot (i.e. \color{red}{\verb|type = "l"|}type="l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r}
+library(ggplot2)
+intervals <- aggregate(df$steps ~ df$interval, df, mean)
+ggplot(intervals, aes(x = intervals$`df$interval` , y = intervals$`df$steps`)) + 
+        geom_line(color="red", size=1) + 
+        labs(title = "Average Daily Steps", x = "Interval", y = "Avg. Steps per Day")
+```
 
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```{r}
+whichMax <- which.max(intervals$`df$steps`)
+maxInterval <- intervals[whichMax, 1]
+maxInterval
+```
 
 ## Imputing missing values
 
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with \color{red}{\verb|NA|}NAs)
+```{r}
+nadf <- df[is.na(df$steps), ]
+numNa <- nrow(nadf)
+numNa
+```
 
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+```{r}
+df <- na.omit(df)
+```
+
+3. Create a new dataset that is equal to the original dataset
+```{r}
+newDf <- df
+```
+
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+```{r}
+sumdata <- aggregate(steps~date, newDf, sum)
+head(sumdata)
+
+hist(sumdata$steps, col = "tomato"
+     , xlab = "Steps"
+     , main = "Total Number of Steps per Day")
+
+
+mean2 <- mean(sumdata$steps)
+mean2
+
+median2 <- median(sumdata$steps)
+median2
+
+mean2 - MeanSteps
+median2 - MedianSteps
+
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+```{r}
+library(timeDate)
+
+newDf$Weekday <- isWeekday(newDf$date)
+head(newDf)
+```
+
+2. Make a panel plot containing a time series plot (i.e. \color{red}{\verb|type = "l"|}type="l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+```{r}
+weekday <- subset(newDf, newDf$Weekday == "TRUE")
+weekdayMean <- aggregate(steps ~ interval, weekday, mean)
+head(weekdayMean)
+
+weekend <- subset(newDf, newDf$Weekday == "FALSE")
+weekendMean <- aggregate(steps ~ interval, weekend, mean)
+head(weekendMean)
+
+
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+plot(weekdayMean$interval, weekdayMean$steps
+     , xlab = "Interval", ylab = "Number of Steps"
+     , main ="Weekday", col ="blue", type="l") 
+
+plot(weekendMean$interval, weekendMean$steps
+     , xlab = "Interval", ylab = "Number of Steps"
+     , main ="Weekend", col ="orange", type="l")
+
+```
+
